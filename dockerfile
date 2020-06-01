@@ -35,6 +35,7 @@ RUN apt-get -y update \
         descartes \
         fiona \
         Rtree==0.8.3 \
+        earthengine-api \
         jupyter
 
 EXPOSE 8888
