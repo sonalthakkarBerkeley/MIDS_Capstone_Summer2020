@@ -56,7 +56,7 @@ library(randomForest)
 library(doParallel)
 library(pROC)
 library(tibble)
-library(psych)
+#library(psych)
 
 set.seed(10)
 registerDoParallel(4)
@@ -68,7 +68,7 @@ getDoParWorkers()
 Let us read and have a first look at the data.
 
 ```{r}
-sdf <- read_sf("data/sample_v2a.geojson")
+sdf <- read_sf("../data/features_for_model_1000.geojson")
 ```
 
 ```{r}
