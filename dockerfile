@@ -20,6 +20,7 @@ RUN apt-get -y update \
         wget \
         unzip \
         git \
+        graphviz \
     && export CPLUS_INCLUDE_PATH=/usr/include/gdal \
     && export C_INCLUDE_PATH=/usr/include/gdal \
     && pip3 install --upgrade pip \
@@ -36,6 +37,12 @@ RUN apt-get -y update \
         fiona \
         Rtree==0.8.3 \
         earthengine-api \
-        jupyter
+        pydot \
+        scikit-learn \
+        seaborn \
+        hdbscan \
+        jupyter \
+        papermill \
+    && pip3 install --upgrade tensorflow keras
 
 EXPOSE 8888
