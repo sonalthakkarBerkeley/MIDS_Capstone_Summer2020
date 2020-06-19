@@ -17,6 +17,7 @@ Login credentials are required to download data. Sign up @ https://urs.earthdata
 * 10 Gb individual GeoTIFF files
 * 250 Gb total
 * 10k files
+
 ##### Acquiring Download Scripts
 
 1. Begin @ https://croplands.org/downloadLPDAAC
@@ -36,23 +37,29 @@ Repeat below step 2-10 for each desired geography
 1. Move all scripts to desired folder.
 Repeat steps 2-3 for all scripts
 2. Terminal: Make script executable `chmod 777 <scriptname.sh>`
-3. Terminal: Execute script `./<scriptname.sh>` You will be prompted to enter your NASA WWHHHAT username and password. 
+3. Terminal: Execute script `./<scriptname.sh>` You will be prompted to enter your NASA EARTHDATA credentials. 
 
 ##### Uploading GFSAD30 Image to GEE 
-Strategy is to upload all downloaded tiles simultaneously to GEE to create a single mosaic image.
+Strategy is to upload multiple tiles simultaneously to GEE to create a single mosaic image per geography. Then, files will be placed in a `ImageCollection`.
+
+Repeat steps 1-5 for each geography.
 1. `GEE` > `Assets` > `NEW` > `GeoTiff`.
-2. Drag/Drop all 459 files to `SELECT` button.
+2. Drag/Drop all files to `SELECT` button.
 3. Choose `Asset Name` for mosaic image.
 4. `Advanced Options` > `Masking mode` > `No-data value` > Enter `3`. Note that this will code any instances of non-data as `3`. 
+5. Follow Sharing Image instructions in below section.
+6. `GEE` > `Assets` > `NEW` > `Image collection` > Input name
+7. Drag/Drop all geography-specific mosaic images to Image collection.
 
 ##### Sharing Image
 1. Choose `<Asset Name>`
-2. Add `<user's GEE login email address>` > `Done`
+2. Choose `SHARE`
+3. Check `Anyone can read` > `Done`
 
 ##### Reviewing File in GEE Viewer
 1. Run below script. 
 ```
-    var myimg = ee.Image("users/<username>/<asset name>");
+    var myimg = ee.ImageCollection("users/<username>/<asset name>");
     Map.addLayer(myimg);
 ```
 2. Click on test points in map & view `b1` value for points
