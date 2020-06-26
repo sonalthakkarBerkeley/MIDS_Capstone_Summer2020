@@ -68,7 +68,7 @@ def main(country, year, resolution=30):
     
     ########################################################################################
     
-    world_df = pd.read_csv('../data/Global_samples_100.csv', index_col=[0])
+    world_df = pd.read_csv('../data/Global_samples_Balanced_100.csv', index_col=[0])
     world_df.head()
     world_df['geometry'] = world_df['geometry'].apply(wkt.loads)
     world_df['samples'] = world_df['samples'].apply(literal_eval)
