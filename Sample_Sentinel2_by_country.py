@@ -8,6 +8,7 @@ from shapely import wkt
 from shapely.geometry import Point
 import warnings
 import argparse
+import time
 
 def main(country, year, resolution=30):
     ee.Initialize()
@@ -173,4 +174,11 @@ if __name__ == "__main__":
     parser.add_argument('--resolution', type=int, help='resolution of Sentinel-2 dat you want to pull')
     args = parser.parse_args()
 
+    start = time.time()
+    
     main(args.country, args.year, args.resolution)
+    
+    end = time.time()
+    hours, rem = divmod(end-start, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
