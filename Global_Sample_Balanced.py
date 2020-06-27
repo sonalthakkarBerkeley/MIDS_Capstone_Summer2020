@@ -56,6 +56,50 @@ def split_country(country_polygon):
         country_split_lst = country_split_lst + areas_list
     return country_split_lst
 
+def generate_boundaries(polygon_shapely) -> list:
+    '''This works for generating max min latitudes and longitudes for a country shape'''
+    min_lon, min_lat, max_lon, max_lat = (polygon_shapely.bounds)
+    return [min_lon, min_lat, max_lon, max_lat]
+
+def generate_edge_coords(polygon_shapely, country_code, edge_len) -> list:
+    '''This works for generating rectangle coords for a country shape'''
+    world_gdf = geopandas.read_file(geopandas.datasets.get_path('naturalearth_lowres'))
+    world_gdf.crs = "EPSG:3857"
+    return_list_coords = []
+    min_lon, min_lat, max_lon, max_lat = polygon_shapely.bounds
+    dict_coords = {}
+    point_list = []
+    lat_list = []
+    lon_list = []
+    counter = 0
+    center_lon = min_lon
+    center_lat = max_lat
+    while center_lon < (max_lon):
+        while center_lat > (min_lat):
+            # print(center_lat, center_lon)
+            point_list.append(counter)
+            lat_list.append(center_lat)
+            lon_list.append(center_lon)
+            counter +=1
+            center_lat -= edge_len
+        
+        center_lon += edge_len
+        center_lat = max_lat
+        
+    dict_coords['POINTS'] = point_list
+    dict_coords['Latitude'] = lat_list
+    dict_coords['Longitude'] = lon_list
+    # print("Total coords: ", counter)
+    df = pd.DataFrame(dict_coords)
+    gdf = geopandas.GeoDataFrame(df, geometry=geopandas.points_from_xy(df.Longitude, df.Latitude))
+    gdf.crs = "EPSG:3857"
+    point_within_country = geopandas.sjoin(gdf, world_gdf[world_gdf.iso_a3 == country_code], how="inner", op='intersects')
+    for index, row in point_within_country.iterrows():
+      (lat, lon) = (row['Latitude'], row['Longitude'])
+    
+      return_list_coords.append((lat, lon))
+    
+    return return_list_coords
 
 def generate_random_pixels(polygon_shapely, n_samples) -> list:
     # There are in total of 6 categories
@@ -81,7 +125,7 @@ def generate_random_pixels(polygon_shapely, n_samples) -> list:
     return sample_balanced_df['coordinate'].tolist()
 
 
-def main(N):
+def main(N, edge_len):
     np.random.seed(210)
     ee.Initialize()
     
@@ -107,12 +151,18 @@ def main(N):
     # Calculate area
     world_small_df['area'] = world_small_df.apply(lambda row: row['geometry'].area, axis=1)
     world_small_df['samples'] = world_small_df.apply(lambda row: generate_random_pixels(row['geometry'], round(row['area']*N/100)), axis=1)
+    # Add coundaries
+    world_small_df['boundaries'] = world_small_df.apply(lambda row: generate_boundaries(row['geometry']), axis=1)
+    # Add coords
+    world_small_df['coords'] = world_small_df.apply(lambda row: generate_edge_coords(row['geometry'], row['country_code'],edge_len), axis=1)
+    
     world_small_df.to_csv('../data/Global_samples_Balanced_{}.csv'.format(N))
 
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Sample (lon, lat) globally')
     parser.add_argument('N', type=int, help='The number of pixels sampled is approximately 15000*N/100.')
+    parser.add_argument('edge_len', type=float, help='The coordinate list based on edge_len for a shape.')
     args = parser.parse_args()
 
-    main(args.N)
+    main(args.N, args.edge_len)
