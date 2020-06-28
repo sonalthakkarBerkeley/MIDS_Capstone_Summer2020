@@ -69,13 +69,14 @@ def main(country, year, resolution=30):
     
     ########################################################################################
     
-    world_df = pd.read_csv('../data/Global_samples_Balanced_100.csv', index_col=[0])
+    world_df = pd.read_csv('../data/Global_Samples_Balanced_n100_m250_s210.csv', index_col=[0])
     world_df.head()
     world_df['geometry'] = world_df['geometry'].apply(wkt.loads)
     world_df['samples'] = world_df['samples'].apply(literal_eval)
+    world_df['n_samples'] = world_df.apply(lambda row: len(row['samples']), axis=1)
     world_gdf = geopandas.GeoDataFrame(world_df, geometry='geometry')
     
-    country_gdf = world_gdf[(world_gdf['country_code']==country) & (world_gdf['area']>2)]
+    country_gdf = world_gdf[(world_gdf['country_code']==country) & (world_gdf['n_samples']>0)]
     country_gdf = country_gdf.reset_index()
     
     country_polygon_dict = dict()
@@ -85,6 +86,7 @@ def main(country, year, resolution=30):
     for k, v in country_polygon_dict.items():
     
         country_segment = k
+        print('==================== {} ===================='.format(country_segment))
         area_of_interest_shapely, random_pixels = v
         
         area_of_interest_ee = ee.Geometry.Polygon(list(area_of_interest_shapely.exterior.coords))
@@ -106,7 +108,9 @@ def main(country, year, resolution=30):
                           )
 
 
-            assert (img_collect.size().getInfo()>0), "No valid image"
+            if img_collect.size().getInfo() == 0:
+                warnings.warn('No valid image.')
+                continue
             print("Total number of images in the collection: ", img_collect.size().getInfo())
 
             # Extract tile information from each image
@@ -171,7 +175,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Pull vegetation index from Sentinel-2 on sampled lat/lon.')
     parser.add_argument('country', type=str, help='ISO alpha-3 country code')
     parser.add_argument('year', type=int, help='year of Sentinel-2 data you want to pull')
-    parser.add_argument('--resolution', type=int, help='resolution of Sentinel-2 dat you want to pull')
+    parser.add_argument('--resolution', type=int, default=30, help='resolution of Sentinel-2 dat you want to pull')
     args = parser.parse_args()
 
     start = time.time()
