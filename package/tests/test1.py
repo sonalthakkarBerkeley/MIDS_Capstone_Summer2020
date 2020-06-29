@@ -8,10 +8,10 @@ ee.Initialize()  # for every notebook/session
 
 # Input
 region_of_interest = {
-    lat: 43.771114,
-    lon: -116.736866,
-    edge_len: 0.005,
-    resolution: 30
+    lat1: 43.771114,
+    lon1: -116.736866,
+    lat2: 43.827113,
+    lon2: -116.522933,
 }
 
 # Instantiate Inference30 object
