@@ -1,6 +1,3 @@
-Thanks for downloading this template!
+# How to demo the website:
 
-Template Name: Medilab
-Template URL: https://bootstrapmade.com/medilab-free-medical-bootstrap-theme/
-Author: BootstrapMade.com
-License: https://bootstrapmade.com/license/
+Run `python -m SimpleHTTPServer` in your terminal (in that directory) and open your web browser to `localhost:8000` to get a demo of the site. 
