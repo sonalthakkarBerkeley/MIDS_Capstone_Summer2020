@@ -493,6 +493,12 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 24px;
 }
 
+.hero-h1-div {
+  background-color: white;
+  padding: 10px;
+  max-width: 800px;
+}
+
 #hero .btn-get-started {
   font-family: "Raleway", sans-serif;
   text-transform: uppercase;
@@ -1763,4 +1769,17 @@ section {
   padding-left: 100px;
   padding-right: 100px;
   margin-top: 50px;
+  max-width: 1200px;
+}
+
+.research-indent {
+  padding-left: 50px;
+}
+
+.research-pic-div {
+  padding-left: 50px;
+  /* max-width: 500px; */
+  margin-bottom: 10px;
+  text-align: center;
+  display: block;
 }
