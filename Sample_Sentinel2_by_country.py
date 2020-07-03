@@ -175,7 +175,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Pull vegetation index from Sentinel-2 on sampled lat/lon.')
     parser.add_argument('country', type=str, help='ISO alpha-3 country code')
     parser.add_argument('year', type=int, help='year of Sentinel-2 data you want to pull')
-    parser.add_argument('--resolution', type=int, default=30, help='resolution of Sentinel-2 dat you want to pull')
+    parser.add_argument('--resolution', type=int, default=30, help='resolution of Sentinel-2 data you want to pull')
     args = parser.parse_args()
 
     start = time.time()
