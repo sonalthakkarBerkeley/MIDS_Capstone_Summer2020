@@ -145,34 +145,36 @@
 
     <!-- ======= About (Importance) Section ======= -->
     <section id="about-importance" class="about">
-      <div class="container-fluid">
+      <div class="container-fluid" id="container-1">
 
-        <div class="row">
+        <div class="row" id="row-1">
 
           <div class="col-xl-5 col-lg-6 video-box d-flex justify-content-center align-items-stretch">
+            <!-- col-xl-5 col-lg-6 -->
             <!-- <a href="https://www.youtube.com/watch?v=jDDaplaOz7Q" class="venobox play-btn mb-4" data-vbtype="video" data-autoplay="true"></a> -->
           </div>
 
           <div class="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch justify-content-center py-5 px-lg-5">
+            <!-- col-xl-7 col-lg-6 -->
             <h3>Why understanding irrigation is important</h3>
-            <p>Esse voluptas cumque vel exercitationem. Reiciendis est hic accusamus. Non ipsam et sed minima temporibus laudantium. Soluta voluptate sed facere corporis dolores excepturi. Libero laboriosam sint et id nulla tenetur. Suscipit aut voluptate.</p>
+            <!-- <p>Esse voluptas cumque vel exercitationem. Reiciendis est hic accusamus. Non ipsam et sed minima temporibus laudantium. Soluta voluptate sed facere corporis dolores excepturi. Libero laboriosam sint et id nulla tenetur. Suscipit aut voluptate.</p> -->
 
             <div class="icon-box">
               <div class="icon"><i class="bx bx-water"></i></div>
-              <h4 class="title"><a href="">Water usage is unsustainable in certain areas</a></h4>
-              <p class="description">____, and farms make up ⅔ of all water usage globally.</p>
+              <h4 class="title"><a href="">Water usage is unsustainable in several countries</a></h4>
+              <p class="description">Agriculture makes up 70% of all freshwater consumption globally.</p>
             </div>
 
             <div class="icon-box">
               <div class="icon"><i class="bx bx-time-five"></i></div>
               <h4 class="title"><a href="">Water usage isn’t tracked around most of the globe</a></h4>
-              <p class="description">Better understand water usage in less regulated geolocations.</p>
+              <p class="description">Better understand water usage in less regulated areas.</p>
             </div>
 
             <div class="icon-box">
               <div class="icon"><i class="bx bx-receipt"></i></div>
               <h4 class="title"><a href="">Inform policy decisions with better data</a></h4>
-              <p class="description">Better understanding of water usage can help inform the development of regulations and monitor compliance.</p>
+              <p class="description">Understanding water usage can help inform the development of regulations and monitor compliance.</p>
             </div>
 
           </div>
@@ -183,7 +185,7 @@
     </section><!-- End About (Importance) Section -->
 
     <!-- ======= Counts Section ======= -->
-    <section id="counts" class="counts">
+    <!-- <section id="counts" class="counts">
       <div class="container">
 
         <div class="row">
@@ -191,7 +193,7 @@
           <div class="col-lg-3 col-md-6">
             <div class="count-box">
               <i class="icofont-doctor-alt"></i>
-              <span data-toggle="counter-up">85</span>
+              <span data-toggle="counter-up">85</span><p>
               <p>Doctors</p>
             </div>
           </div>
@@ -223,18 +225,19 @@
         </div>
 
       </div>
-    </section><!-- End Counts Section -->
+    </section>-->
+    <!-- End Counts Section -->
 
     <!-- ======= About (Difficulty) Section ======= -->
-    <section id="about" class="about">
-      <div class="container-fluid">
+    <section id="about" class="about-2">
+      <div class="container-fluid" id="container-2">
 
         <div class="row">
 
 
           <div class="col-xl-7 col-lg-6 icon-boxes d-flex flex-column align-items-stretch justify-content-center py-5 px-lg-5">
             <h3>Why predicting 30m irrigation labels is hard</h3>
-            <p>Esse voluptas cumque vel exercitationem. Reiciendis est hic accusamus. Non ipsam et sed minima temporibus laudantium. Soluta voluptate sed facere corporis dolores excepturi. Libero laboriosam sint et id nulla tenetur. Suscipit aut voluptate.</p>
+            <!-- <p>Esse voluptas cumque vel exercitationem. Reiciendis est hic accusamus. Non ipsam et sed minima temporibus laudantium. Soluta voluptate sed facere corporis dolores excepturi. Libero laboriosam sint et id nulla tenetur. Suscipit aut voluptate.</p> -->
 
             <div class="icon-box">
               <div class="icon"><i class="bx bx-message-error"></i></div>
@@ -245,13 +248,13 @@
             <div class="icon-box">
               <div class="icon"><i class="bx bx-time-five"></i></div>
               <h4 class="title"><a href="">Compute Complexity</a></h4>
-              <p class="description">At 30m resolution, generating global coverage is computationally expensive. Our package allows researchers to generate labels at small subregions at a time.</p>
+              <p class="description">At 30m resolution, generating global coverage is computationally expensive. Our package allows researchers to generate labels for small regions at a time.</p>
             </div>
 
             <div class="icon-box">
               <div class="icon"><i class="bx bx-bar-chart"></i></div>
               <h4 class="title"><a href="">Irregular Temporal Signatures</a></h4>
-              <p class="description">Irrigation patterns over the year can change depending on the crop type, geolocation, and irrigation type.</p>
+              <p class="description">Irrigation patterns over the year can change depending on the location, weather, crop type, and irrigation type.</p>
             </div>
 
           </div>
@@ -271,7 +274,7 @@
 
         <div class="section-title">
           <h2>Irrigation30 Python Package</h2>
-          <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea. Quia fugiat sit in iste officiis commodi quidem hic quas.</p>
+          <p>We've developed a Python3 package that enables reseachers to make <br>30m irrigation inferences and visualizations for small regions at a time.</p>
         </div>
 
         <div class="row">
@@ -305,7 +308,7 @@
                      <p>Visualize irrigation labels in Jupyter notebooks with GEE's visualization engine.</p>
                    </div>
                    <div class="col-lg-4 text-center order-1 order-lg-2">
-                     <img src="assets/img/departments-1.jpg" alt="" class="img-fluid">
+                     <!-- <img src="assets/img/departments-1.jpg" alt="" class="img-fluid"> -->
                    </div>
                  </div>
                </div>
@@ -320,7 +323,7 @@
                      <p>GFSAD1000 → Irrigation labels at 1000m</p>
                    </div>
                    <div class="col-lg-4 text-center order-1 order-lg-2">
-                     <img src="assets/img/departments-2.jpg" alt="" class="img-fluid">
+                     <!-- <img src="assets/img/departments-2.jpg" alt="" class="img-fluid"> -->
                    </div>
                  </div>
                </div>
@@ -332,7 +335,7 @@
                      <p>Get 30m irrigation labels anywhere on the globe. (Regional limits.)</p>
                    </div>
                    <div class="col-lg-4 text-center order-1 order-lg-2">
-                     <img src="assets/img/departments-3.jpg" alt="" class="img-fluid">
+                     <!-- <img src="assets/img/departments-3.jpg" alt="" class="img-fluid"> -->
                    </div>
                  </div>
                </div>
@@ -345,7 +348,7 @@
                      <p>Supervised learning → Cluster centroid features are used to predict irrigation labels for each 30m pixel.</p>
                    </div>
                    <div class="col-lg-4 text-center order-1 order-lg-2">
-                     <img src="assets/img/departments-4.jpg" alt="" class="img-fluid">
+                     <!-- <img src="assets/img/departments-4.jpg" alt="" class="img-fluid"> -->
                    </div>
                  </div>
                </div>
@@ -365,7 +368,7 @@
            </div>
          </div>
          <div class="section-title">
-          <a href="https://github.com/sonalthakkarBerkeley/MIDS_Capstone_Summer2020" class="research-btn">Try Irrigation30 Package</a>
+          <a href="https://github.com/sonalthakkarBerkeley/MIDS_Capstone_Summer2020" class="research-btn" style="margin-top:30px;">Try Irrigation30 Package</a>
          </div>
 
         <!-- <div class="row">
@@ -581,10 +584,15 @@
               <div class="member-info">
                 <h4>Weixin Wu</h4>
                 <span>Data Scientist</span>
-                <p>Explicabo voluptatem mollitia et repellat qui dolorum quasi</p>
+                <p>Bio</p>
                 <div class="social">
                   <a href="https://www.linkedin.com/in/angela-wu-6031a092/"> <i class="ri-linkedin-box-fill"></i> </a>
-                  <a href="https://www.ischool.berkeley.edu/people/weixin-wu"> <i class="ri-ischool-box-fill"></i> </a>
+                  <a href="https://www.ischool.berkeley.edu/people/weixin-wu"> <img class="berk-icon" src="https://upload.wikimedia.org/wikipedia/commons/a/a1/Seal_of_University_of_California%2C_Berkeley.svg"></img> </a>
+                  <!-- class="berk-icon" -->
+                  <!-- https://www.berkeley.edu/favicon.ico -->
+                  <!-- https://upload.wikimedia.org/wikipedia/commons/a/a1/Seal_of_University_of_California%2C_Berkeley.svg -->
+                  <!-- https://www.ischool.berkeley.edu/sites/all/themes/custom/i_school/favicon.ico -->
+                  <!-- https://upload.wikimedia.org/wikipedia/commons/8/8b/California_Golden_Bears_logo.svg -->
                 </div>
               </div>
             </div>
@@ -596,10 +604,10 @@
               <div class="member-info">
                 <h4>Sonal Thakkar</h4>
                 <span>Data Scientist</span>
-                <p>Aut maiores voluptates amet et quis praesentium qui senda para</p>
+                <p>Bio</p>
                 <div class="social">
                   <a href="https://www.linkedin.com/in/sonalthakkar/"> <i class="ri-linkedin-box-fill"></i> </a>
-                  <a href="https://www.ischool.berkeley.edu/people/sonal-thakkar"> <i class="ri-ischool-box-fill"></i> </a>
+                  <a href="https://www.ischool.berkeley.edu/people/sonal-thakkar"> <img class="berk-icon" src="https://upload.wikimedia.org/wikipedia/commons/a/a1/Seal_of_University_of_California%2C_Berkeley.svg"></img> </a>
                 </div>
               </div>
             </div>
@@ -611,10 +619,10 @@
               <div class="member-info">
                 <h4>Adam Sohn</h4>
                 <span>Data Scientist</span>
-                <p>Quisquam facilis cum velit laborum corrupti fuga rerum quia</p>
+                <p>Bio</p>
                 <div class="social">
                   <a href="https://www.linkedin.com/in/asohn/"> <i class="ri-linkedin-box-fill"></i> </a>
-                  <a href="https://www.ischool.berkeley.edu/people/adam-sohn"> <i class="ri-ischool-box-fill"></i> </a>
+                  <a href="https://www.ischool.berkeley.edu/people/adam-sohn"> <img class="berk-icon" src="https://upload.wikimedia.org/wikipedia/commons/a/a1/Seal_of_University_of_California%2C_Berkeley.svg"></img> </a>
                 </div>
               </div>
             </div>
@@ -626,10 +634,10 @@
               <div class="member-info">
                 <h4>Matt Brimmer</h4>
                 <span>Data Scientist</span>
-                <p>Dolorum tempora officiis odit laborum officiis et et accusamus</p>
+                <p>Bio</p>
                 <div class="social">
                   <a href="https://www.linkedin.com/in/matt-brimmer/"> <i class="ri-linkedin-box-fill"></i> </a>
-                  <a href="https://www.ischool.berkeley.edu/people/matt-brimmer"> <i class="ri-ischool-box-fill"></i> </a>
+                  <a href="https://www.ischool.berkeley.edu/people/matt-brimmer"> <img class="berk-icon" src="https://upload.wikimedia.org/wikipedia/commons/a/a1/Seal_of_University_of_California%2C_Berkeley.svg"></img> </a>
                 </div>
               </div>
             </div>
@@ -641,10 +649,10 @@
               <div class="member-info">
                 <h4>Will Hawkins</h4>
                 <span>Data Scientist</span>
-                <p>Dolorum tempora officiis odit laborum officiis et et accusamus</p>
+                <p>Bio</p>
                 <div class="social">
                   <a href="https://www.linkedin.com/in/will-hawkins-iv/"> <i class="ri-linkedin-box-fill"></i> </a>
-                  <a href="https://www.ischool.berkeley.edu/people/will-hawkins"> <i class="ri-ischool-box-fill"></i> </a>
+                  <a href="https://www.ischool.berkeley.edu/people/will-hawkins"> <img class="berk-icon" src="https://upload.wikimedia.org/wikipedia/commons/a/a1/Seal_of_University_of_California%2C_Berkeley.svg"></img> </a>
                 </div>
               </div>
             </div>
