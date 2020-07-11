@@ -2,18 +2,17 @@
 
 
 import ee
+import pandas as pd
 
 from irrigate30_common import (model_scale, wait_for_task_completion, model_projection, 
                     base_asset_directory, gfsad30_asset_directory,
                     export_asset_table_to_drive, calc_distance, create_bounding_box, source_loc,
                     start_date, end_date, write_image_asset, num_samples, aoi_lat, aoi_lon, aoi_edge_len,
-                    band_blue, band_green, band_red, band_nir, get_by_month_data)
+                    band_blue, band_green, band_red, band_nir, get_by_month_data, n_clusters, determine_labels)
 
 
 def main():
     ee.Initialize()
-
-    print('got here')
     
     aoi = create_bounding_box(aoi_lat, aoi_lon, aoi_edge_len)
 
@@ -57,12 +56,72 @@ def main():
 
     innerJoined = innerJoin.apply(ee.ImageCollection([byMonth]), GFSAD30_IC, filterTimeEq);
     # # Checkpoint 4 -- does this look right?
-    print("\n\nCheckpoint 4 -- does this look right?", innerJoined.getInfo())
+    # print("\n\nCheckpoint 4 -- does this look right?", innerJoined.getInfo())
 
     joined = innerJoined.map( lambda feature: ee.Image.cat(feature.get('primary'), feature.get('secondary')))
-    print("\n\nCheckpoint 5 -- does this look right?", joined.getInfo())
+    # print("\n\nCheckpoint 5 -- does this look right?", joined.getInfo())
 
+    # Now turn it into single image
     joined_img = ee.ImageCollection(joined).median()
+    
+    # Mask the non-cropland
+    # 0 = water, 1 = non-cropland, 2 = cropland, 3 = 'no data'
+    cropland = joined_img.select('b1').eq(2)
+    joined_img_masked = joined_img.mask(cropland)
+    non_cropland = joined_img.select('b1').lt(2) or joined_img.select('b1').gt(2)
+    non_cropland = non_cropland.mask(non_cropland)
+    
+
+    training = joined_img_masked.sample(region= aoi, scale=model_scale, numPixels=num_samples)
+
+    # Instantiate the clusterer and train it.
+    clusterer = ee.Clusterer.wekaKMeans(n_clusters).train(training)
+
+    # Cluster the input using the trained clusterer.
+    result = joined_img_masked.cluster(clusterer)
+    # print("\n\nResult:",result.getInfo())
+
+    # loop through all the clusters
+    band_output = []
+    monthly_df = pd.DataFrame()
+    for i in range(n_clusters):
+        # Create Aggregate NDVI Signature
+        band_output.append(joined_img_masked.mask(result.select('cluster').eq(i) ) \
+            .reduceRegion(reducer=ee.Reducer.mean(), geometry=aoi, maxPixels=1e13, scale=model_scale) \
+            .getInfo())
+        print("\n\nBand Output:", band_output[i])
+        temp_df = pd.DataFrame([pd.Series(list(band_output[i].keys())),
+                                pd.Series(list(band_output[i].values()))]).T
+        temp_df.columns = ['band','mean_value']
+        new_name = 'mean_value'+str(i)
+        temp_df.rename(columns={'mean_value':new_name}, inplace=True)
+        temp_df.set_index('band',inplace=True)
+        monthly_df = pd.concat([monthly_df, temp_df], axis=1)
+        # monthly_df = monthly_df.merge(temp_df, how='inner', right_index=True, left_index=True)
+        # print("Temp_df: ", temp_df)
+
+    print("\n\nMonthly_df: ", monthly_df)
+
+    # TODO -- FOLLOWING CODE ONLY HANDLES 2-CLUSTER CASE. GENERALIZE...
+    irrigated_lst = determine_labels(monthly_df)
+    if irrigated_lst[0] == 'Not Irrigated':
+        # Create Mosaic to view
+        mosaic = ee.ImageCollection([
+            result.mask(result.select('cluster').eq(0)).visualize({'palette': ['ff0000']}),
+            result.mask(result.select('cluster').eq(1)).visualize({'palette': ['00ff00']}),
+            non_cropland.visualize({'palette': ['000000']})
+        ]).mosaic()
+    else:
+        mosaic = ee.ImageCollection([
+            result.mask(result.select('cluster').eq(1)).visualize({'palette': ['ff0000']}),
+            result.mask(result.select('cluster').eq(0)).visualize({'palette': ['00ff00']}),
+            non_cropland.visualize({'palette': ['000000']})
+        ]).mosaic()
+
+
+    # Write this to Asset to be viewed later
+    write_image_asset(mosaic, 'blah','blah')
+
     # export_asset_table_to_drive(f'{base_asset_directory}/samples_{num_samples}')
 
 
