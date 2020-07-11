@@ -5,12 +5,14 @@ import time
 import itertools
 import datetime
 import json
+import pandas as pd
 
 from math import sin, cos, sqrt, atan2, radians
 
 import ee
 
 model_scale = 30
+n_clusters = 2
 
 # gfsad30_asset_directory is where GFSAD30 is located
 gfsad30_asset_directory = "users/ajsohn/GFSAD30"
@@ -26,7 +28,7 @@ model_snapshot_path_prefix = base_asset_directory + "/" + model_snapshot_version
 num_samples = 50000
 aoi_lat = 43.771114
 aoi_lon = -116.736866
-aoi_edge_len = 0.01
+aoi_edge_len = 0.05
 
 source_loc = 'COPERNICUS/S2'
 start_date = '2018-1-01'
@@ -133,4 +135,7 @@ def get_by_month_data(img):
 	# print("byMonth:", byMonth.getInfo())
 
 	return ee.Image(merged).select(['ndvi','ndvi_1','ndvi_2','ndvi_3','ndvi_4','ndvi_5','ndvi_6', 'ndvi_7','ndvi_8','ndvi_9','ndvi_10','ndvi_11'],
-		['ndvi01','ndvi02','ndvi03','ndvi04','ndvi05','ndvi06','ndvi07', 'ndvi08','ndvi09','ndvi10','ndvi11','ndvi12']);
+		['ndvi01','ndvi02','ndvi03','ndvi04','ndvi05','ndvi06','ndvi07', 'ndvi08','ndvi09','ndvi10','ndvi11','ndvi12'])
+
+def determine_labels(df):
+	return ["Not Irrigated", "Irrigated"]
