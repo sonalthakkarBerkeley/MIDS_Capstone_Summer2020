@@ -18,10 +18,6 @@ def Create_AOI_Box(center_lat,center_lon,edge_len):
     return ee.Geometry.Rectangle([center_lon-edge_len/2, center_lat-edge_len/2, 
                                                 center_lon+edge_len/2, center_lat+edge_len/2])
 
-def Model_Pipeline_Placeholder(aoi):
-    # will be the actual pipeline in the future but for now will load from pickle and shift
-    new_df = pd.read_pickle('simple_df')
-    return new_df
 
 def Evaluate_Consistency(aoi_lat, aoi_lon, aoi_edge):
     '''
@@ -52,7 +48,7 @@ def Evaluate_Consistency(aoi_lat, aoi_lon, aoi_edge):
     '''
     # Assuming already ran ee.Authenticate(), ee.Initialize()
     # Hard-Coded Values (for now): 
-    nSegments = 5 # would like this value to remain odd
+    nSegments = 3 # would like this value to remain odd
     aoi_lat, aoi_lon = 43.771114, -116.736866
     aoi_edge_len = 0.005
 
@@ -97,12 +93,12 @@ def Evaluate_Consistency(aoi_lat, aoi_lon, aoi_edge):
             base_predictions.Pct_Consistent.mean())
 
 
-def create_overlapping_images(base_lat, base_lon, base_edge):
+def create_overlapping_images(base_lat, base_lon, base_edge, case_num):
     '''
     This function will create the images in GEE
     '''
 
-    nSegments = 5 # would like this value to remain odd
+    nSegments = 3 # would like this value to remain odd
 
     area_of_interest_base = Create_AOI_Box(base_lat, base_lon, base_edge)
 
@@ -112,7 +108,7 @@ def create_overlapping_images(base_lat, base_lon, base_edge):
     longitude_vals = [base_lon + step_size * (i-math.floor(nSegments / 2)) for i in range(nSegments)]
 
     # Build Base Table -- will add to this through iterations
-    model_area(area_of_interest_base, 'overlap_test_image_base')
+    model_area(area_of_interest_base, 'testing/overlap_test_image_base_case_'+str(case_num))
 
     i = 0
     for lat in latitude_vals:
@@ -124,18 +120,18 @@ def create_overlapping_images(base_lat, base_lon, base_edge):
             else:
                 print("Creating i=",i)
                 model_area(Create_AOI_Box(lat, lon, base_edge), 
-                            'overlap_test_image_'+ str(i) )
+                            'testing/overlap_test_image_case_' + str(case_num) + '_' + str(i) )
 
-def evaluate_overlapping_images(nSegments, aoi):
-    base_img = ee.Image(base_asset_directory + "/"+ "overlap_test_image_base")
+def evaluate_overlapping_images(nSegments, aoi, case_num):
+    base_img = ee.Image(base_asset_directory + "/testing/"+ "overlap_test_image_base_case_" + str(case_num))
 
     # if there are 5 segments, there are 24 (25-1 that is the base) images
-    img_list = ["overlap_test_image_"+str(i) 
+    img_list = ["overlap_test_image_case_" + str(case_num) + '_' +str(i) 
         for i in range(1,nSegments*nSegments+1) if i != math.floor(nSegments * nSegments/2)+1]
 
     shifted_images = []
     for img in img_list:
-        shifted_images.append(ee.Image(base_asset_directory + "/" + img))
+        shifted_images.append(ee.Image(base_asset_directory + "/testing/" + img))
 
     shifted_images.append(base_img)
     IC = ee.ImageCollection(shifted_images)
@@ -148,12 +144,13 @@ def evaluate_overlapping_images(nSegments, aoi):
     
     # Now merge these together
     innerJoin = ee.Join.inner()
-    filterTimeEq = ee.Filter.equals(leftField= '1',rightField= '1')
+    filterTimeEq = ee.Filter.equals(leftField= '1', rightField= '1')
 
     innerJoined = innerJoin.apply(ee.ImageCollection([count_img]), ee.ImageCollection([sum_img]), filterTimeEq)
 
     joined = innerJoined.map( lambda feature: ee.Image.cat(feature.get('primary'), feature.get('secondary')))
     joined_img = ee.ImageCollection(joined).max()
+
     # now create percent similar
     percent_similar = joined_img.expression(
         "(b('class_sum') / b('class_count') > 1 - b('class_sum') / b('class_count') ) ? " +
@@ -161,29 +158,47 @@ def evaluate_overlapping_images(nSegments, aoi):
             ).rename('percent_same');
 
 
-    print("\n\nCheckpoint 4 -- does this look right?", joined_img.getInfo())
-    write_image_asset(percent_similar, aoi,  "test_joined_percent_similar")
+    #write_image_asset(percent_similar, aoi,  "overlap_case_" + str(case_num) + "_percent_similar")
+
+    # Now reduce the image to get mean and median values
+    median_val = percent_similar.reduceRegion(ee.Reducer.median(), geometry = aoi, scale = 30)
+    mean_val = percent_similar.reduceRegion(ee.Reducer.mean(), geometry = aoi, scale = 30)
+    print("\nMedian val: ", median_val.getInfo())
+    print("Mean val :", mean_val.getInfo())
+   
 
 
 def main():
 
     ee.Initialize()
 
-    CASE = 6
-    base_aoi_lon = AOIs[CASE][0]
-    base_aoi_lat = AOIs[CASE][1]
-    aoi_edge_len = 0.05
+    # for CASE in range(1,12):
+    #     base_aoi_lon = AOIs[CASE][0]
+    #     base_aoi_lat = AOIs[CASE][1]
+    #     aoi_edge_len = 0.05
 
-    base_aoi = create_bounding_box(base_aoi_lat, base_aoi_lon, aoi_edge_len)
+    #     base_aoi = create_bounding_box(base_aoi_lat, base_aoi_lon, aoi_edge_len)
 
-    # Create images as assets
-    # last_task = create_overlapping_images(base_aoi_lat, base_aoi_lon, aoi_edge_len)
+    #     # Create images as assets
+    #     last_task = create_overlapping_images(base_aoi_lat, base_aoi_lon, aoi_edge_len, CASE)
     # # the above takes some time -- may want to wait until the last task is finished
-    # wait_for_task_completion([last_task], exit_if_failures=True)
-    # time.sleep(10)  #hoping that the last task above is truly the last one
 
-    evaluate_overlapping_images(5, base_aoi)
+    # wait for keyboard input -- alert user to make sure the last one has been written
+    input("Once all the files are written (check GEE), Press Enter to continue...")
+
+    
+    for CASE in range(1,12):
+        base_aoi_lon = AOIs[CASE][0]
+        base_aoi_lat = AOIs[CASE][1]
+        aoi_edge_len = 0.05
+
+        base_aoi = create_bounding_box(base_aoi_lat, base_aoi_lon, aoi_edge_len)
+        print('\nCase= ', CASE)
+        evaluate_overlapping_images(3, base_aoi, CASE)
+
 
 
 if __name__ == '__main__':
     main()
+
+    # note to remove files: example:  earthengine rm users/mbrimmer/w210_irrigated_croplands/overlap_case_6_percent_similar

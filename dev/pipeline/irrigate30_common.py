@@ -25,7 +25,7 @@ model_snapshot_version = ""
 
 model_snapshot_path_prefix = base_asset_directory + "/" + model_snapshot_version
 
-num_samples = 5000
+num_samples = 10000
 aoi_lat = 43.771114
 aoi_lon = -116.736866
 aoi_edge_len = 0.05
@@ -34,7 +34,7 @@ AOIs = [
 	[0,0], 						# EMPTY
 	[82.121452, 21.706688],     # C01 (India): 
     [-94.46643, 48.76297],      # C02 (Canada):  
-    [-105.69772, 49.316722],    # C03 (Canada): 
+    [-116.736866, 43.771114],    # C03 (Cent US - Idaho): 
     [10.640815, 52.185072],     # C04 (Germany): strange result... look at S2 layer! clouds?
     [10.7584699, 52.2058339],   # C05 (Germany): strange result
     [33.857852, 46.539389],     # C06 (Ukraine): good example, get second opinion
@@ -44,6 +44,7 @@ AOIs = [
     [67.359826, 43.55412],      # C10 (Uzbekistan): mostly good
     [-46.2607, -11.93067] 		# C11 (Brazil): strange result
 ]
+
 
 source_loc = 'COPERNICUS/S2'
 start_date = '2018-1-01'
