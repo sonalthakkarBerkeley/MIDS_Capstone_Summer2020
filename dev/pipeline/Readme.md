@@ -18,6 +18,6 @@
 Assuming an active Google Earth Engine account, once in environment, authenticate with Google Earth Engine with the following command. Follow prompts.
 `earthengine authenticate`
 
-##### Loading Jupyter
+###### Loading Jupyter
 `jupyter notebook`
 
