@@ -1,0 +1,23 @@
+name: irr30
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.6
+  - gdal==2.2.2
+  - folium
+  - pandas
+  - matplotlib
+  - shapely
+  - rasterio
+  - geopandas
+  - descartes
+  - rtree==0.8.3
+  - earthengine-api
+  - pydot
+  - scikit-learn
+  - seaborn
+  - hdbscan
+  - jupyter
+  - papermill
+prefix: /opt/anaconda3/envs/irr30
