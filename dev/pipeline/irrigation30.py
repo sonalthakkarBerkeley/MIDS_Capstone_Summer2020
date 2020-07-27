@@ -29,17 +29,47 @@ class irrigation30():
 
         
         # Trigger the authentication flow.
-        ee.Authenticate()
+#         ee.Authenticate()
 
         # Initialize the library.
         ee.Initialize()
+         
+        if type(center_lat) == float:
+            self.center_lat = center_lat
+        else:
+            raise ValueError('Please enter float value for latitude')
+            exit()
+        
+        if type(center_lon) == float:
+            self.center_lon = center_lon
+        else:
+            raise ValueError('Please enter float value for longitude')
+            exit()
             
-        self.center_lat = center_lat
-        self.center_lon = center_lon
-        self.edge_len = edge_len
-        self.year = year
-        self.resolution = resolution
-        self.maxSample = maxSample
+        if type(edge_len) == float:
+            self.edge_len = edge_len
+        else:
+            raise ValueError('Please enter float value for edge length')
+            exit()
+        
+        if ((type(year) == int)  and (year > 2015 ) and year <= int(time.strftime("%Y"))):
+            self.year = year
+        else:
+            raise ValueError('Please enter integer value for year > 2015 and less than or equal to current year')
+            exit()
+         
+        if ((type(resolution) == int) and (resolution >=10)):
+            self.resolution = resolution
+        else:
+            raise ValueError('Please enter integer value for resolution greater than or equal to 10')
+            exit()
+        
+        if type(maxSample) == int:
+            self.maxSample = maxSample
+        else:
+            raise ValueError('Please enter integer value for maxSample')
+            exit()
+            
         self.label = []
         self.avg_ndvi = np.zeros((2, 12))
 #         self.std_ndvi = np.zeros((2, 12))
