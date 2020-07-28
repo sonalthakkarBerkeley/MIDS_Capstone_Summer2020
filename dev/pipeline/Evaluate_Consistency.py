@@ -2,6 +2,7 @@ import irrigation30
 import math
 import ee
 
+base_asset_directory = "users/mbrimmer/w210_irrigated_croplands"
 
 def create_overlapping_images(irr, case_num):
     '''
@@ -21,7 +22,7 @@ def create_overlapping_images(irr, case_num):
 
     # Build Base Table -- will add to this through iterations
     irr.fit_predict()
-    irr.write_image_asset('testing/overlap_test_image_base_case_'+str(case_num))
+    irr.write_image_asset('testing/overlap_test_image_base_case_'+str(case_num), write_binary_version=True)
 
     i = 0
     for lat in latitude_vals:
@@ -32,9 +33,10 @@ def create_overlapping_images(irr, case_num):
                 continue
             else:
                 print("Creating image i=",i)
+                
                 irr_overlap = irrigation30.irrigation30(lat, lon, edge_len=base_edge)
                 irr_overlap.fit_predict()
-                irr_overlap.write_image_asset('testing/overlap_test_image_case_' + str(case_num) + '_' + str(i))
+                irr_overlap.write_image_asset('testing/overlap_test_image_case_' + str(case_num) + '_' + str(i), write_binary_version = True)
 
 
 def evaluate_overlapping_images(nSegments, base_irr, case_num):
@@ -53,33 +55,34 @@ def evaluate_overlapping_images(nSegments, base_irr, case_num):
 
     count_img = IC.reduce(ee.Reducer.count())
     sum_img = IC.reduce(ee.Reducer.sum())
-    # testing this out
-    #write_image_asset(count_img, aoi,  "test_count")
-    #write_image_asset(sum_img, aoi, "test_sum")
     
     # Now merge these together
     innerJoin = ee.Join.inner()
     filterTimeEq = ee.Filter.equals(leftField= '1', rightField= '1')
 
     innerJoined = innerJoin.apply(ee.ImageCollection([count_img]), ee.ImageCollection([sum_img]), filterTimeEq)
-
     joined = innerJoined.map( lambda feature: ee.Image.cat(feature.get('primary'), feature.get('secondary')))
-    joined_img = ee.ImageCollection(joined).max()
+    joined_img = ee.ImageCollection(joined).max().cast({'class_sum': 'double', 'class_count': 'double'})
 
+    
     # now create percent similar
     percent_similar = joined_img.expression(
         "(b('class_sum') / b('class_count') > 1 - b('class_sum') / b('class_count') ) ? " +
-            "b('class_sum') / b('class_count') : 1-b('class_sum') / b('class_count')"
-            ).rename('percent_same');
+            "b('class_sum') / b('class_count') : 1- b('class_sum') / b('class_count')"
+            ).rename('percent_same')
 
 
-    #write_image_asset(percent_similar, aoi,  "overlap_case_" + str(case_num) + "_percent_similar")
+    # Now reduce the image to get mean
 
-    # Now reduce the image to get mean and median values
-    median_val = percent_similar.reduceRegion(ee.Reducer.median(), geometry = base_irr.aoi_ee, scale = 30)
+    # task = ee.batch.Export.image.toAsset(
+    #             region=base_irr.aoi_ee,
+    #             image=percent_similar,
+    #             scale=30,
+    #             assetId=base_asset_directory+'/testingTesting1235',
+    #             maxPixels=1e13
+    #         )
+    # task.start()
     mean_val = percent_similar.reduceRegion(ee.Reducer.mean(), geometry = base_irr.aoi_ee, scale = 30)
-    print("Case: ", case_num)
-    print("\nMedian val: ", median_val.getInfo())
     print("Mean val :", mean_val.getInfo())
    
 
@@ -113,8 +116,8 @@ def main():
 
     nCases = 21
 
+    # Either run this to create the files or to Evaluate (don't run single time to do both because it takes some time to create things)
     CREATE_FILES = True
-    EVALUATE_FILES = False
 
     if CREATE_FILES:
         for CASE in range(1,nCases+1):
@@ -129,9 +132,8 @@ def main():
             # the above takes some time -- may want to wait until the last task is finished
 
             # wait for keyboard input -- alert user to make sure the last one has been written
-            input("Once all the files are written (check GEE), Press Enter to continue...")
 
-    if EVALUATE_FILES:
+    if CREATE_FILES == False:
         for CASE in range(1,nCases+1):
             base_aoi_lon = AOIs[CASE][0]
             base_aoi_lat = AOIs[CASE][1]

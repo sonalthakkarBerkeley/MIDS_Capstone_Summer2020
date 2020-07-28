@@ -79,7 +79,7 @@ class irrigation30():
         self.aoi_ee = self.__create_bounding_box_ee()
         self.dist_lon = self.__calc_distance(self.center_lon-self.edge_len/2, self.center_lat, self.center_lon+self.edge_len/2, self.center_lat)
         self.dist_lat = self.__calc_distance(self.center_lon, self.center_lat-self.edge_len/2, self.center_lon, self.center_lat+self.edge_len/2)
-        self.predicted_image = ee.Image()
+        self.binary_image = ee.Image()
         print('The selected area is approximately {:.2f} km by {:.2f} km'.format(self.dist_lon, self.dist_lat))
         
         est_total_pixels = round(self.dist_lat*self.dist_lon*(1000**2)/((self.resolution)**2))
@@ -292,27 +292,9 @@ class irrigation30():
             self.image = self.image.addBands(ee.Image(cluster_result.select('cluster')).rename('prediction'))
             self.label = ['Cluster_'+str(i) for i in range(0,self.nClusters)]
 
-        # Now create single image that will be the prediction for the area
-        # first need to create image with a single band for the prediction and the GFSAD information
-        GFSAD30_IC = ee.ImageCollection("users/ajsohn/GFSAD30").filterBounds(self.aoi_ee)
-        GFSAD30_img = GFSAD30_IC.max().clip(self.aoi_ee)
-
-        filterTimeEq = ee.Filter.equals(leftField= '1',rightField= '1')
-        res_w_gfsad30_temp = ee.Join.inner().apply(ee.ImageCollection([cluster_result]), GFSAD30_IC, filterTimeEq);
-        res_w_gfsad30 = res_w_gfsad30_temp.map( lambda feature: ee.Image.cat(feature.get('primary'), feature.get('secondary')))
-        res_w_gfsad30_img = ee.ImageCollection(res_w_gfsad30).median()
-
-        # Create single band image with results and gfsad
-        if self.label[0] == "Rainfed":
-            predicted_image = res_w_gfsad30_img.expression(
-            "(b('b1') != 2) ? 0 " +
-                ": (b('cluster') == 0) ? 0 : 1"
-                ).rename('class')
-        else:
-            predicted_image = res_w_gfsad30_img.expression(
-            "(b('b1') != 2) ? 0 " +
-                ": (b('cluster') == 1) ? 0 : 1"
-                ).rename('class')
+        # Binary is useful for testing / evaluation purposes
+        self.binary_image = self.image.expression(
+            "(b('gfsad30') == 2) ? (b('prediction')) : 0 ").rename('class').cast({'class':'int'})
 
 
         
@@ -450,19 +432,30 @@ class irrigation30():
 #         plt.legend(['Diff in NDVI', 'Smooth'], loc='best')
 
 
-    def write_image_asset(self, image_asset_id, wait=False):
+    def write_image_asset(self, image_asset_id, write_binary_version = False):
         '''Writes predicted image out as an image to Google Earth Engine as an asset'''
         image_asset_id = self.base_asset_directory + '/' +  image_asset_id
 
-        task = ee.batch.Export.image.toAsset(
-            crs=self.model_projection,
-            region=self.aoi_ee,
-            image=self.predicted_image,
-            scale=30,
-            assetId=image_asset_id,
-            maxPixels=1e13
-        )
-        task.start()
+        if write_binary_version == False:
+            task = ee.batch.Export.image.toAsset(
+                crs=self.model_projection,
+                region=self.aoi_ee,
+                image=self.image,
+                scale=30,
+                assetId=image_asset_id,
+                maxPixels=1e13
+            )
+            task.start()
+        else:
+            task = ee.batch.Export.image.toAsset(
+                crs=self.model_projection,
+                region=self.aoi_ee,
+                image=self.binary_image,
+                scale=30,
+                assetId=image_asset_id,
+                maxPixels=1e13
+            )
+            task.start()
 
 
     def write_image_google_drive(self, filename):
@@ -477,4 +470,3 @@ class irrigation30():
         )
         print("Writing To Google Drive filename= ", filename)
         task.start()
-
