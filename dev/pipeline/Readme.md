@@ -10,6 +10,7 @@
     2. Windows 10 Enterprise Anaconda Prompt
 * Reference [Google Earth Engine Conda instructions](https://developers.google.com/earth-engine/python_install-conda) for troubleshooting.
 * If issues activating environment, attempt `conda init <SHELL>` where `<SHELL>` is replaced by `bash` or `zsh` as applicable to your setup.
+* If issues running `earthengine authenticate`, VPN may be restricting necessary connections.
 
 ###### Importing & Activating Environment
 1. `conda env create -f irr30.yml`
