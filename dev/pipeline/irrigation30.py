@@ -13,7 +13,10 @@ from scipy.signal import savgol_filter
 from scipy.signal import find_peaks
         
 class irrigation30():
-    
+ 
+    # Trigger the authentication flow.
+    ee.Authenticate()
+
     # Set the max number of samples used in the clustering
     maxSample = 100000
     # Technically, resolution can be a parameter in __init___
@@ -43,8 +46,6 @@ class irrigation30():
             year: year the satellite data should pull images for
             maxClusters_set: should be for range 2-10'''
 
-        # Trigger the authentication flow.
-        ee.Authenticate()
 
         # Initialize the library.
         ee.Initialize()
