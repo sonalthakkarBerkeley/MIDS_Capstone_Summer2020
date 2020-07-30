@@ -114,8 +114,8 @@ class irrigation30():
         # hard-code a few things
         # base_asset_directory is where we are going to store output images
         self.base_asset_directory = "users/mbrimmer/w210_irrigated_croplands"
-        self.model_projection = "EPSG:4326"
-        self.testing_asset_folder = self.base_asset_directory + '/testing/'
+        self.model_projection = "EPSG:3857"
+        #self.model_projection = "EPSG:4326"
 
     def __create_bounding_box_ee(self):
         '''Creates a rectangle for pulling image information using center coordinates and edge_len'''
@@ -520,11 +520,11 @@ class irrigation30():
 
 
 
-    def write_image_asset(self, image_asset_id, write_binary_version = False):
+    def write_image_asset(self, image_asset_id, write_simple_version = False):
         '''Writes predicted image out as an image to Google Earth Engine as an asset'''
         image_asset_id = self.base_asset_directory + '/' +  image_asset_id
 
-        if write_binary_version == False:
+        if write_simple_version == False:
             task = ee.batch.Export.image.toAsset(
                 crs=self.model_projection,
                 region=self.aoi_ee,
@@ -546,15 +546,25 @@ class irrigation30():
             task.start()
 
 
-    def write_image_google_drive(self, filename):
+    def write_image_google_drive(self, filename, write_simple_version = False):
         '''Writes predicted image out as an image to Google Drive as a TIF file'''
-        task = ee.batch.Export.image.toDrive(
-            crs=self.model_projection,
-            region=self.aoi_ee,
-            image=self.predicted_image,
-            scale=resolution,
-            description=filename,
-            maxPixels=1e13
-        )
+        if write_simple_version == False:
+            task = ee.batch.Export.image.toDrive(
+                crs=self.model_projection,
+                region=self.aoi_ee,
+                image=self.predicted_image,
+                scale=resolution,
+                description=filename,
+                maxPixels=1e13
+            )
+        else:
+            task = ee.batch.Export.image.toDrive(
+                crs=self.model_projection,
+                region=self.aoi_ee,
+                image=self.simple_image,
+                scale=resolution,
+                description=filename,
+                maxPixels=1e13
+            )
         print("Writing To Google Drive filename= ", filename)
         task.start()

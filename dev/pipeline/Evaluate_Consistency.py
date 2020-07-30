@@ -22,7 +22,7 @@ def create_overlapping_images(irr, case_num):
 
     # Build Base Table -- will add to this through iterations
     irr.fit_predict()
-    irr.write_image_asset('testing/overlap_test_image_base_case_'+str(case_num), write_binary_version=True)
+    irr.write_image_asset('testing/overlap_test_image_base_case_'+str(case_num), write_simple_version=True)
 
     i = 0
     for lat in latitude_vals:
@@ -36,7 +36,7 @@ def create_overlapping_images(irr, case_num):
                 
                 irr_overlap = irrigation30.irrigation30(lat, lon, edge_len=base_edge)
                 irr_overlap.fit_predict()
-                irr_overlap.write_image_asset('testing/overlap_test_image_case_' + str(case_num) + '_' + str(i), write_binary_version = True)
+                irr_overlap.write_image_asset('testing/overlap_test_image_case_' + str(case_num) + '_' + str(i), write_simple_version = True)
 
 
 def evaluate_overlapping_images(nSegments, base_irr, case_num):
@@ -141,7 +141,6 @@ def main():
 
     if CREATE_FILES == False:
         for CASE in range(1,nCases+1):
-        # for CASE in range(1,2):
             base_aoi_lon = AOIs[CASE][0]
             base_aoi_lat = AOIs[CASE][1]
             aoi_edge_len = 0.05
