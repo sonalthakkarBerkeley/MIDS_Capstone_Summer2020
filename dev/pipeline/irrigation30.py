@@ -66,7 +66,7 @@ class irrigation30():
         if (type(edge_len) == float and (edge_len >=0.5 and edge_len < 0.005)):
             self.edge_len = edge_len
         else:
-            raise ValueError('Please enter float value for edge length')
+            raise ValueError('Please enter float value for edge length between 0.5 and 0.005')
             exit()
             
         # (range is 2017 to year prior)
