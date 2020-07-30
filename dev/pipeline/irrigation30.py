@@ -63,12 +63,12 @@ class irrigation30():
             raise ValueError('Please enter float value for longitude')
             exit()
             
-        if type(edge_len) == float:
+        if (type(edge_len) == float and (edge_len >=0.5 and edge_len < 0.005)):
             self.edge_len = edge_len
         else:
             raise ValueError('Please enter float value for edge length')
             exit()
-        
+            
         # (range is 2017 to year prior)
         if ((type(year) == int)  and (year >= 2017 and year <= int(time.strftime("%Y")) - 1)):
             self.year = year
