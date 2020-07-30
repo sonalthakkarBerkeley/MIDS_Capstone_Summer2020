@@ -71,20 +71,25 @@ def evaluate_overlapping_images(nSegments, base_irr, case_num):
             "b('class_sum') / b('class_count') : 1- b('class_sum') / b('class_count')"
             ).rename('percent_same')
 
-
     # Now reduce the image to get mean
-
+    # task = ee.batch.Export.image.toAsset(
+    #             region=base_irr.aoi_ee,
+    #             image=joined_img,
+    #             scale=30,
+    #             assetId=base_asset_directory+'/joined_img123435',
+    #             maxPixels=1e13
+    #         )
+    # task.start()
     # task = ee.batch.Export.image.toAsset(
     #             region=base_irr.aoi_ee,
     #             image=percent_similar,
     #             scale=30,
-    #             assetId=base_asset_directory+'/testingTesting1235',
+    #             assetId=base_asset_directory+'/testingTesting1237',
     #             maxPixels=1e13
     #         )
     # task.start()
     mean_val = percent_similar.reduceRegion(ee.Reducer.mean(), geometry = base_irr.aoi_ee, scale = 30)
     print("Mean val :", mean_val.getInfo())
-   
 
 
 def main():
@@ -114,13 +119,14 @@ def main():
     [-55.77832, -12.8049]       # C21
     ]
 
-    nCases = 21
+    nCases = 12
 
     # Either run this to create the files or to Evaluate (don't run single time to do both because it takes some time to create things)
-    CREATE_FILES = True
+    CREATE_FILES = False
 
     if CREATE_FILES:
         for CASE in range(1,nCases+1):
+        # for CASE in range(1,2):
             base_aoi_lon = AOIs[CASE][0]
             base_aoi_lat = AOIs[CASE][1]
             aoi_edge_len = 0.05
@@ -135,6 +141,7 @@ def main():
 
     if CREATE_FILES == False:
         for CASE in range(1,nCases+1):
+        # for CASE in range(1,2):
             base_aoi_lon = AOIs[CASE][0]
             base_aoi_lat = AOIs[CASE][1]
             aoi_edge_len = 0.05
