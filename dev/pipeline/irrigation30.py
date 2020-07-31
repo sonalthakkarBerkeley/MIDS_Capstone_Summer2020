@@ -396,7 +396,8 @@ class irrigation30():
         self.__identify_label(cluster_result)
 
         # Binary (simple image) is useful for testing / evaluation purposes
-        # print("Print simple_label: ", self.simple_label)
+        # print("Testing -- Print Label: ", self.label)
+        # print("Testing -- Print simple_label: ", self.simple_label)
         
         gee_label_irr = ee.List([0] + [1*(self.simple_label[i] == "Irrigated") for i in range(len(self.simple_label))] + [0 for i in range(10-self.nClusters)])
 
@@ -406,7 +407,7 @@ class irrigation30():
 
         cluster_nbrs = ee.List(cluster_nums_py)
         gee_label_dict = ee.Dictionary.fromLists(cluster_nbrs, gee_label_irr)
-    
+
         temp_image = self.image.expression(
             "(b('gfsad30') == 2) ? (b('prediction')) : -1 ").rename('class').cast({'class':'int'}) 
 
@@ -529,7 +530,7 @@ class irrigation30():
                 crs=self.model_projection,
                 region=self.aoi_ee,
                 image=self.image,
-                scale=resolution,
+                scale=irrigation30.resolution,
                 assetId=image_asset_id,
                 maxPixels=1e13
             )
@@ -539,7 +540,7 @@ class irrigation30():
                 crs=self.model_projection,
                 region=self.aoi_ee,
                 image=self.simple_image,
-                scale=resolution,
+                scale=irrigation30.resolution,
                 assetId=image_asset_id,
                 maxPixels=1e13
             )
@@ -552,8 +553,8 @@ class irrigation30():
             task = ee.batch.Export.image.toDrive(
                 crs=self.model_projection,
                 region=self.aoi_ee,
-                image=self.predicted_image,
-                scale=resolution,
+                image=self.image.select('prediction'),
+                scale=irrigation30.resolution,
                 description=filename,
                 maxPixels=1e13
             )
@@ -562,7 +563,7 @@ class irrigation30():
                 crs=self.model_projection,
                 region=self.aoi_ee,
                 image=self.simple_image,
-                scale=resolution,
+                scale=irrigation30.resolution,
                 description=filename,
                 maxPixels=1e13
             )
