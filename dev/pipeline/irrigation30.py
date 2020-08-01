@@ -37,7 +37,8 @@ class irrigation30():
     cluster_color = ['red', 'blue', 'orange', 'yellow', 'darkgreen', 'lightgreen', 'lightblue', 'purple', 'pink', 'lightgray']
     
     
-    def __init__(self, center_lat=43.771114, center_lon=-116.736866, edge_len=0.005, year=2018, maxClusters_set=2):
+    def __init__(self, center_lat=43.771114, center_lon=-116.736866, edge_len=0.005, year=2018, maxClusters_set=2, 
+        base_asset_directory="users/mbrimmer/"):
         '''
         Parameters: 
             center_lat: latitude for the location coordinate
@@ -83,6 +84,8 @@ class irrigation30():
             raise ValueError('Please enter integer value for resolution greater than or equal to 10')
             exit()
 
+        # base_asset_directory is where we are going to store output images
+        self.base_asset_directory = base_asset_directory
 
         # initialize remaining variables
         self.label = []
@@ -110,10 +113,6 @@ class irrigation30():
         self.nSample = min(irrigation30.maxSample,est_total_pixels)
 #         print('The estimated percentage of pixels used in the model is {:.0%}.'.format(self.nSample/est_total_pixels))
 
-
-        # hard-code a few things
-        # base_asset_directory is where we are going to store output images
-        self.base_asset_directory = "users/mbrimmer/w210_irrigated_croplands"
         self.model_projection = "EPSG:3857"
         #self.model_projection = "EPSG:4326"
 
@@ -518,7 +517,6 @@ class irrigation30():
         for i in range(0, self.nClusters):
             plt.plot(irrigation30.month_lst, self.avg_ndvi[i], label=self.label[i], color=irrigation30.cluster_color[i])
         plt.legend()
-
 
 
     def write_image_asset(self, image_asset_id, write_simple_version = False):
