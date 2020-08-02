@@ -1,0 +1,15 @@
+name: irr30
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.6
+  - numpy
+  - scipy
+  - folium
+  - pandas
+  - matplotlib
+  - shapely
+  - earthengine-api
+  - jupyter
+prefix: /opt/anaconda3/envs/irr30

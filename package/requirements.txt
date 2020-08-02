@@ -1,0 +1,7 @@
+pandas
+shapely
+earthengine-api
+folium
+matplotlib
+numpy
+scipy
