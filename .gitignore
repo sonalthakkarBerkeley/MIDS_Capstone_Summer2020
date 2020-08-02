@@ -1,5 +1,6 @@
 .DS_Store
 dev/pipeline/__pycache__/
+package/irrigation30/__pycache__/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
