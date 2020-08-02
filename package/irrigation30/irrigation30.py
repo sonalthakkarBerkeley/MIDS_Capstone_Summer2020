@@ -6,8 +6,6 @@ from shapely.geometry import box
 import folium
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.interpolate import interp1d
-from scipy.signal import savgol_filter
 from scipy.signal import find_peaks
 
 
@@ -38,7 +36,7 @@ class Irrigation30():
     CLUSTER_COLORS = ['red', 'blue', 'orange', 'yellow', 'darkgreen',
                       'lightgreen', 'lightblue', 'purple', 'pink', 'lightgray']
 
-    def __init__(self, center_lat=43.771114, center_lon=-116.736866, edge_len=0.005, year=2018, num_clusters=2):
+    def __init__(self, center_lat=43.771114, center_lon=-116.736866, edge_len=0.005, year=2018, num_clusters=2, base_asset_directory="users/mbrimmer/"):
         '''
         Parameters:
             center_lat: latitude for the location coordinate
@@ -96,6 +94,7 @@ class Irrigation30():
         self.image = ee.Image()
         self.nClusters = 0
         self.simple_label = []
+        self.simple_image = ee.Image()
 
         # Create the bounding box using GEE API
         self.aoi_ee = self.__create_bounding_box_ee()
@@ -115,9 +114,10 @@ class Irrigation30():
 
         # hard-code a few things
         # base_asset_directory is where we are going to store output images
-        self.base_asset_directory = "users/mbrimmer/w210_irrigated_croplands"
-        self.model_projection = "EPSG:4326"
-        self.testing_asset_folder = self.base_asset_directory + '/testing/'
+        # self.base_asset_directory = "users/mbrimmer/w210_irrigated_croplands"
+        self.base_asset_directory = base_asset_directory
+        self.model_projection = "EPSG:3857"
+        # self.testing_asset_folder = self.base_asset_directory + '/testing/'
 
     def __create_bounding_box_ee(self):
         '''Creates a rectangle for pulling image information using center coordinates and edge_len'''
@@ -158,14 +158,11 @@ class Irrigation30():
         Q2_end = str(self.year) + '-7-01'
         Q3_end = str(self.year) + '-10-01'
 
-        print("PREPPING S2 RGB")
         self.Sentinel_RGB = (ee.ImageCollection('COPERNICUS/S2')
                              .filterDate(start_date, end_date)
                              .filterBounds(self.aoi_ee)
                              .select(band_red, band_green, band_blue)
                              .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 10)))
-
-        print("PREPPING S2 RGB - QUARTERS")
 
         self.Sentinel_RGB_Q1 = self.Sentinel_RGB.filterDate(
             start_date, Q1_end).median().clip(self.aoi_ee)
@@ -175,8 +172,6 @@ class Irrigation30():
             Q2_end, Q3_end).median().clip(self.aoi_ee)
         self.Sentinel_RGB_Q4 = self.Sentinel_RGB.filterDate(
             Q3_end, end_date).median().clip(self.aoi_ee)
-
-        print("DONE PREPPING S2 RGB")
 
         # Create image collection that contains the area of interest
         Sentinel_IC = (ee.ImageCollection('COPERNICUS/S2')
@@ -434,6 +429,36 @@ class Irrigation30():
 
         self.__identify_label(cluster_result)
 
+        # Binary (simple image) is useful for testing / evaluation purposes
+        # print("Testing -- Print Label: ", self.label)
+        # print("Testing -- Print simple_label: ", self.simple_label)
+
+        gee_label_irr = ee.List([0] + [1 * (self.simple_label[i] == "Irrigated")
+                                       for i in range(len(self.simple_label))] + [0 for i in range(10 - self.nClusters)])
+
+        # including -1 to be my 'not cropland below'
+        # Hard-coding 10 as top max_clusters
+        cluster_nums_py = [str(i) for i in range(-1, 10)]
+
+        cluster_nbrs = ee.List(cluster_nums_py)
+        gee_label_dict = ee.Dictionary.fromLists(cluster_nbrs, gee_label_irr)
+
+        temp_image = self.image.expression(
+            "(b('gfsad30') == 2) ? (b('prediction')) : -1 ").rename('class').cast({'class': 'int'})
+
+        self.simple_image = temp_image \
+            .where(temp_image.eq(-1), ee.Number(0)) \
+            .where(temp_image.eq(0), ee.Number(gee_label_dict.get('0'))) \
+            .where(temp_image.eq(1), ee.Number(gee_label_dict.get('1'))) \
+            .where(temp_image.eq(2), ee.Number(gee_label_dict.get('2'))) \
+            .where(temp_image.eq(3), ee.Number(gee_label_dict.get('3'))) \
+            .where(temp_image.eq(4), ee.Number(gee_label_dict.get('4'))) \
+            .where(temp_image.eq(5), ee.Number(gee_label_dict.get('5'))) \
+            .where(temp_image.eq(6), ee.Number(gee_label_dict.get('6'))) \
+            .where(temp_image.eq(7), ee.Number(gee_label_dict.get('7'))) \
+            .where(temp_image.eq(8), ee.Number(gee_label_dict.get('8'))) \
+            .where(temp_image.eq(9), ee.Number(gee_label_dict.get('9')))
+
         print('Model complete!')
 
     def plot_map(self):
@@ -486,24 +511,22 @@ class Irrigation30():
             except:
                 print("Could not display {}".format(name))
 
-        print("STARTING PLOT_MAP")
-
         # Add EE drawing method to folium.
         folium.Map.add_ee_layer = add_ee_layer
 
-        myMap = folium.Map(location=[self.center_lat, self.center_lon], zoom_start=10)
+        myMap = folium.Map(location=[self.center_lat, self.center_lon], zoom_start=11)
         aoi_shapely = self.__create_bounding_box_shapely()
         folium.GeoJson(aoi_shapely, name="Area of Interest").add_to(myMap)
 
-        print("ADDING PREDICTION LAYER")
+        # print("ADDING PREDICTION LAYER")
         start = time.time()
         visParams = {'min': 0, 'max': 1, 'palette': ['yellow', 'green']}
         myMap.add_ee_layer(self.image.select('prediction'), visParams, show=True, name='Prediction')
         end = time.time()
-        print("DONE - ADDING PREDICTION LAYER, " + str((end - start) / 60))
+        print("ADDED PREDICTION LAYER --> " + str(round((end - start) / 60, 2)) + " min")
 
         # Add Sentinel-2 RGB quarterly layers
-        print("ADDING S2 RGB Q LAYERS")
+        # print("ADDING S2 RGB Q LAYERS")
         start = time.time()
         visParams = {'max': 4000}
         myMap.add_ee_layer(self.Sentinel_RGB_Q1, visParams, show=False, name="S2-Q1")
@@ -511,9 +534,9 @@ class Irrigation30():
         myMap.add_ee_layer(self.Sentinel_RGB_Q3, visParams, show=False, name="S2-Q3")
         myMap.add_ee_layer(self.Sentinel_RGB_Q4, visParams, show=False, name="S2-Q4")
         end = time.time()
-        print("DONE - ADDING S2 RGB Q LAYERS, " + str((end - start) / 60))
+        print("ADDED S2 RGB LAYERS --> " + str(round((end - start) / 60, 2)) + " min")
 
-        print("ADDING G1000 LAYER")
+        # print("ADDING G1000 LAYER")
         start = time.time()
         visParams = {'min': 0, 'max': 5, 'palette': [
             'black', 'green', 'a9e1a9', 'yellow', 'ffdb00', '#ffa500']}
@@ -525,9 +548,9 @@ class Irrigation30():
         #     5: Croplands: rainfed, rainfed, very minor fragments (orange)
         myMap.add_ee_layer(self.image.select('gfsad1000'), visParams, show=False, name='GFSAD1000')
         end = time.time()
-        print("DONE - ADDING G1000 LAYER, " + str((end - start) / 60))
+        print("ADDED G1000 LAYER --> " + str(round((end - start) / 60, 2)) + " min")
 
-        print("ADDING 12 NDVI LAYERS")
+        # print("ADDING 12 NDVI LAYERS")
         start = time.time()
         visParams = {'min': 0, 'max': 1, 'palette': ['red', 'yellow', 'green']}
         for i in range(1, 13):
@@ -536,7 +559,7 @@ class Irrigation30():
             myMap.add_ee_layer(self.image.select(temp_band), visParams,
                                show=False, name='NDVI ' + month_label)
         end = time.time()
-        print("DONE - ADDING 12 NDVI LAYERS, " + str((end - start) / 60))
+        print("ADDED 12 NDVI LAYERS --> " + str(round((end - start) / 60, 2)) + " min")
 
         myMap.add_child(folium.LayerControl())
         folium.Marker([self.center_lat, self.center_lon], tooltip='center').add_to(myMap)
@@ -565,16 +588,20 @@ class Irrigation30():
         plt.title("NDVI Temporal Signature")
         plt.legend()
 
-    def write_image_asset(self, image_asset_id, write_binary_version=False):
+    def write_image_asset(self, image_asset_id, write_simple_version=False):
         '''Writes predicted image out as an image to Google Earth Engine as an asset'''
-        image_asset_id = self.base_asset_directory + '/' + image_asset_id
+        # image_asset_id = self.base_asset_directory + '/' + image_asset_id
+        image_asset_id = self.base_asset_directory + image_asset_id
 
-        if write_binary_version == False:
+        print("BASE ASSET DIRECTORY:", self.base_asset_directory)
+        print("IMAGE ASSET PATH:", image_asset_id)
+
+        if write_simple_version == False:
             task = ee.batch.Export.image.toAsset(
                 crs=self.model_projection,
                 region=self.aoi_ee,
                 image=self.image,
-                scale=30,
+                scale=self.RESOLUTION,
                 assetId=image_asset_id,
                 maxPixels=1e13
             )
@@ -583,22 +610,32 @@ class Irrigation30():
             task = ee.batch.Export.image.toAsset(
                 crs=self.model_projection,
                 region=self.aoi_ee,
-                image=self.binary_image,
-                scale=30,
+                image=self.simple_image,
+                scale=self.RESOLUTION,
                 assetId=image_asset_id,
                 maxPixels=1e13
             )
             task.start()
 
-    def write_image_google_drive(self, filename):
+    def write_image_google_drive(self, filename, write_simple_version=False):
         '''Writes predicted image out as an image to Google Drive as a TIF file'''
-        task = ee.batch.Export.image.toDrive(
-            crs=self.model_projection,
-            region=self.aoi_ee,
-            image=self.predicted_image,
-            scale=30,
-            description=filename,
-            maxPixels=1e13
-        )
-        print("Writing To Google Drive filename = ", filename)
+        if write_simple_version == False:
+            task = ee.batch.Export.image.toDrive(
+                crs=self.model_projection,
+                region=self.aoi_ee,
+                image=self.image.select('prediction'),  # image=self.predicted_image ?
+                scale=self.RESOLUTION,
+                description=filename,
+                maxPixels=1e13
+            )
+        else:
+            task = ee.batch.Export.image.toDrive(
+                crs=self.model_projection,
+                region=self.aoi_ee,
+                image=self.simple_image,
+                scale=self.RESOLUTION,
+                description=filename,
+                maxPixels=1e13
+            )
+        print("Writing To Google Drive filename = ", filename + ".tif")
         task.start()
