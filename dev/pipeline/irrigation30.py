@@ -15,7 +15,7 @@ from scipy.signal import find_peaks
 class irrigation30():
  
     # Trigger the authentication flow.
-    #ee.Authenticate()
+    ee.Authenticate()
 
     # Set the max number of samples used in the clustering
     maxSample = 100000
@@ -37,8 +37,7 @@ class irrigation30():
     cluster_color = ['red', 'blue', 'orange', 'yellow', 'darkgreen', 'lightgreen', 'lightblue', 'purple', 'pink', 'lightgray']
     
     
-    def __init__(self, center_lat=43.771114, center_lon=-116.736866, edge_len=0.005, year=2018, maxClusters_set=2, 
-        base_asset_directory="users/mbrimmer/"):
+    def __init__(self, center_lat=43.771114, center_lon=-116.736866, edge_len=0.005, year=2018, maxClusters_set=2):
         '''
         Parameters: 
             center_lat: latitude for the location coordinate
@@ -64,7 +63,7 @@ class irrigation30():
             raise ValueError('Please enter float value for longitude')
             exit()
             
-        if (type(edge_len) == float and (edge_len <=0.5 and edge_len > 0.005)):
+        if (type(edge_len) == float and (edge_len <= 0.5 and edge_len >= 0.005)):
             self.edge_len = edge_len
         else:
             raise ValueError('Please enter float value for edge length between 0.5 and 0.005')
@@ -84,8 +83,6 @@ class irrigation30():
             raise ValueError('Please enter integer value for resolution greater than or equal to 10')
             exit()
 
-        # base_asset_directory is where we are going to store output images
-        self.base_asset_directory = base_asset_directory
 
         # initialize remaining variables
         self.label = []
@@ -96,11 +93,9 @@ class irrigation30():
         self.temperature_avg = []
         self.precipitation = []
         self.image = ee.Image()
-
         self.nClusters = 0
         self.simple_label = []
-        self.simple_image = ee.Image()
-
+            
         # Create the bounding box using GEE API
         self.aoi_ee = self.__create_bounding_box_ee()
         # Estimate the area of interest
@@ -113,8 +108,12 @@ class irrigation30():
         self.nSample = min(irrigation30.maxSample,est_total_pixels)
 #         print('The estimated percentage of pixels used in the model is {:.0%}.'.format(self.nSample/est_total_pixels))
 
-        self.model_projection = "EPSG:3857"
-        #self.model_projection = "EPSG:4326"
+
+        # hard-code a few things
+        # base_asset_directory is where we are going to store output images
+        self.base_asset_directory = "users/mbrimmer/w210_irrigated_croplands"
+        self.model_projection = "EPSG:4326"
+        self.testing_asset_folder = self.base_asset_directory + '/testing/'
 
     def __create_bounding_box_ee(self):
         '''Creates a rectangle for pulling image information using center coordinates and edge_len'''
@@ -393,36 +392,7 @@ class irrigation30():
         self.avg_ndvi = cluster_df.to_numpy()
 
         self.__identify_label(cluster_result)
-
-        # Binary (simple image) is useful for testing / evaluation purposes
-        # print("Testing -- Print Label: ", self.label)
-        # print("Testing -- Print simple_label: ", self.simple_label)
         
-        gee_label_irr = ee.List([0] + [1*(self.simple_label[i] == "Irrigated") for i in range(len(self.simple_label))] + [0 for i in range(10-self.nClusters)])
-
-        # including -1 to be my 'not cropland below'
-        # Hard-coding 10 as top max_clusters
-        cluster_nums_py = [str(i) for i in range(-1,10)]
-
-        cluster_nbrs = ee.List(cluster_nums_py)
-        gee_label_dict = ee.Dictionary.fromLists(cluster_nbrs, gee_label_irr)
-
-        temp_image = self.image.expression(
-            "(b('gfsad30') == 2) ? (b('prediction')) : -1 ").rename('class').cast({'class':'int'}) 
-
-        self.simple_image = temp_image \
-            .where(temp_image.eq(-1), ee.Number(0) ) \
-            .where(temp_image.eq(0), ee.Number(gee_label_dict.get('0'))) \
-            .where(temp_image.eq(1), ee.Number(gee_label_dict.get('1'))) \
-            .where(temp_image.eq(2), ee.Number(gee_label_dict.get('2'))) \
-            .where(temp_image.eq(3), ee.Number(gee_label_dict.get('3'))) \
-            .where(temp_image.eq(4), ee.Number(gee_label_dict.get('4'))) \
-            .where(temp_image.eq(5), ee.Number(gee_label_dict.get('5'))) \
-            .where(temp_image.eq(6), ee.Number(gee_label_dict.get('6'))) \
-            .where(temp_image.eq(7), ee.Number(gee_label_dict.get('7'))) \
-            .where(temp_image.eq(8), ee.Number(gee_label_dict.get('8'))) \
-            .where(temp_image.eq(9), ee.Number(gee_label_dict.get('9')))
-
         print('Model complete')
         
     def plot_map(self):
@@ -519,16 +489,17 @@ class irrigation30():
         plt.legend()
 
 
-    def write_image_asset(self, image_asset_id, write_simple_version = False):
+
+    def write_image_asset(self, image_asset_id, write_binary_version = False):
         '''Writes predicted image out as an image to Google Earth Engine as an asset'''
         image_asset_id = self.base_asset_directory + '/' +  image_asset_id
 
-        if write_simple_version == False:
+        if write_binary_version == False:
             task = ee.batch.Export.image.toAsset(
                 crs=self.model_projection,
                 region=self.aoi_ee,
                 image=self.image,
-                scale=irrigation30.resolution,
+                scale=30,
                 assetId=image_asset_id,
                 maxPixels=1e13
             )
@@ -537,33 +508,23 @@ class irrigation30():
             task = ee.batch.Export.image.toAsset(
                 crs=self.model_projection,
                 region=self.aoi_ee,
-                image=self.simple_image,
-                scale=irrigation30.resolution,
+                image=self.binary_image,
+                scale=30,
                 assetId=image_asset_id,
                 maxPixels=1e13
             )
             task.start()
 
 
-    def write_image_google_drive(self, filename, write_simple_version = False):
+    def write_image_google_drive(self, filename):
         '''Writes predicted image out as an image to Google Drive as a TIF file'''
-        if write_simple_version == False:
-            task = ee.batch.Export.image.toDrive(
-                crs=self.model_projection,
-                region=self.aoi_ee,
-                image=self.image.select('prediction'),
-                scale=irrigation30.resolution,
-                description=filename,
-                maxPixels=1e13
-            )
-        else:
-            task = ee.batch.Export.image.toDrive(
-                crs=self.model_projection,
-                region=self.aoi_ee,
-                image=self.simple_image,
-                scale=irrigation30.resolution,
-                description=filename,
-                maxPixels=1e13
-            )
+        task = ee.batch.Export.image.toDrive(
+            crs=self.model_projection,
+            region=self.aoi_ee,
+            image=self.predicted_image,
+            scale=30,
+            description=filename,
+            maxPixels=1e13
+        )
         print("Writing To Google Drive filename= ", filename)
         task.start()
