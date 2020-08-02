@@ -8,6 +8,7 @@ This project was developed by a team of UC Berkeley students in the Master’s i
 
 **Website**: https://groups.ischool.berkeley.edu/irrigation30/webdev/
 
+
 ## Installation
 
 ### Dependencies
@@ -50,14 +51,7 @@ If you are having a hard time getting the right package versions installed, you 
 
 For a full tutorial of how the package is used in Jupyter notebooks, see our Jupyter notebook demo `Demo.ipynb`.
 
-## Testing
-
-from irrigation30 import __
-
-def test____():
-  assert func() == "output"
-
-etc
+For more info on how to download TIF assets to Google Earth Engine and download TIF files to Google Drive, see `docs/download_TIF.md`.
 
 ## Help and Support
 

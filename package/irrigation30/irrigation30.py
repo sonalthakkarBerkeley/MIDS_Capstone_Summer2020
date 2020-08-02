@@ -36,7 +36,7 @@ class Irrigation30():
     CLUSTER_COLORS = ['red', 'blue', 'orange', 'yellow', 'darkgreen',
                       'lightgreen', 'lightblue', 'purple', 'pink', 'lightgray']
 
-    def __init__(self, center_lat=43.771114, center_lon=-116.736866, edge_len=0.005, year=2018, num_clusters=2, base_asset_directory="users/mbrimmer/"):
+    def __init__(self, center_lat=43.771114, center_lon=-116.736866, edge_len=0.005, year=2018, num_clusters=2):
         '''
         Parameters:
             center_lat: latitude for the location coordinate
@@ -48,17 +48,17 @@ class Irrigation30():
         # Initialize the library.
         ee.Initialize()
 
-        # error handle parameter issues
-        if type(center_lat) == float:
+        # Error handle parameter issues
+        if (type(center_lat) == float and (center_lat >= -90 and center_lat <= 90)):
             self.center_lat = center_lat
         else:
-            raise ValueError('Please enter float value for latitude')
+            raise ValueError('Please enter float value for latitude between -90 and 90')
             exit()
 
-        if type(center_lon) == float:
+        if (type(center_lon) == float and (center_lon >= -180 and center_lon <= 180)):
             self.center_lon = center_lon
         else:
-            raise ValueError('Please enter float value for longitude')
+            raise ValueError('Please enter float value for longitude between -180 and 180')
             exit()
 
         if (type(edge_len) == float and (edge_len <= 0.5 and edge_len >= 0.005)):
@@ -95,6 +95,7 @@ class Irrigation30():
         self.nClusters = 0
         self.simple_label = []
         self.simple_image = ee.Image()
+        self.base_asset_directory = None
 
         # Create the bounding box using GEE API
         self.aoi_ee = self.__create_bounding_box_ee()
@@ -110,14 +111,10 @@ class Irrigation30():
         est_total_pixels = round(self.dist_lat * self.dist_lon *
                                  (1000**2) / ((Irrigation30.RESOLUTION)**2))
         self.nSample = min(Irrigation30.MAX_SAMPLE, est_total_pixels)
-        # print('The estimated percentage of pixels used in the model is {:.0%}.'.format(self.nSample/est_total_pixels))
+        # print('The estimated percentage of pixels used in the model is
+        # {:.0%}.'.format(self.nSample/est_total_pixels))
 
-        # hard-code a few things
-        # base_asset_directory is where we are going to store output images
-        # self.base_asset_directory = "users/mbrimmer/w210_irrigated_croplands"
-        self.base_asset_directory = base_asset_directory
         self.model_projection = "EPSG:3857"
-        # self.testing_asset_folder = self.base_asset_directory + '/testing/'
 
     def __create_bounding_box_ee(self):
         '''Creates a rectangle for pulling image information using center coordinates and edge_len'''
@@ -175,9 +172,9 @@ class Irrigation30():
 
         # Create image collection that contains the area of interest
         Sentinel_IC = (ee.ImageCollection('COPERNICUS/S2')
-                         .filterDate(start_date, end_date)
-                         .filterBounds(self.aoi_ee)
-                         .select(band_nir, band_red))
+                       .filterDate(start_date, end_date)
+                       .filterBounds(self.aoi_ee)
+                       .select(band_nir, band_red))
 
         # Get GFSAD30 image and clip to the area of interest
         GFSAD30_IC = ee.ImageCollection("users/ajsohn/GFSAD30").filterBounds(self.aoi_ee)
@@ -429,10 +426,6 @@ class Irrigation30():
 
         self.__identify_label(cluster_result)
 
-        # Binary (simple image) is useful for testing / evaluation purposes
-        # print("Testing -- Print Label: ", self.label)
-        # print("Testing -- Print simple_label: ", self.simple_label)
-
         gee_label_irr = ee.List([0] + [1 * (self.simple_label[i] == "Irrigated")
                                        for i in range(len(self.simple_label))] + [0 for i in range(10 - self.nClusters)])
 
@@ -518,20 +511,16 @@ class Irrigation30():
         aoi_shapely = self.__create_bounding_box_shapely()
         folium.GeoJson(aoi_shapely, name="Area of Interest").add_to(myMap)
 
-        # print("ADDING PREDICTION LAYER")
+        # Add Prediction / Cluster Label layer
         start = time.time()
-        # NEW VIS PARAMS: Cluster map layer
         visParams = {'min': 0, 'max': self.nClusters - 1,
                      'palette': self.CLUSTER_COLORS[:self.nClusters]}
-        # OLD VIS PARAMS
-        # visParams = {'min': 0, 'max': 1, 'palette': ['yellow', 'green']}
         myMap.add_ee_layer(self.image.select('prediction'), visParams, show=True, name='Prediction')
         end = time.time()
-        print("ADDED PREDICTION LAYER \t--> " +
+        print("ADDED PREDICTION LAYER \t\t--> " +
               str(round((end - start) / 60, 2)) + " min")
 
         # Add Sentinel-2 RGB quarterly layers
-        # print("ADDING S2 RGB Q LAYERS")
         start = time.time()
         visParams = {'max': 4000}
         myMap.add_ee_layer(self.Sentinel_RGB_Q1, visParams, show=False, name="Sentinel2-Q1")
@@ -539,9 +528,9 @@ class Irrigation30():
         myMap.add_ee_layer(self.Sentinel_RGB_Q3, visParams, show=False, name="Sentinel2-Q3")
         myMap.add_ee_layer(self.Sentinel_RGB_Q4, visParams, show=False, name="Sentinel2-Q4")
         end = time.time()
-        print("ADDED S2 RGB LAYERS \t--> " + str(round((end - start) / 60, 2)) + " min")
+        print("ADDED S2 RGB LAYERS \t\t--> " + str(round((end - start) / 60, 2)) + " min")
 
-        # print("ADDING G1000 LAYER")
+        # Add GFSAD1000 Layer
         start = time.time()
         visParams = {'min': 0, 'max': 5, 'palette': [
             'black', 'green', 'a9e1a9', 'yellow', 'ffdb00', '#ffa500']}
@@ -553,9 +542,9 @@ class Irrigation30():
         #     5: Croplands: rainfed, rainfed, very minor fragments (orange)
         myMap.add_ee_layer(self.image.select('gfsad1000'), visParams, show=False, name='GFSAD1000')
         end = time.time()
-        print("ADDED GFSAD1000 LAYER \t--> " + str(round((end - start) / 60, 2)) + " min")
+        print("ADDED GFSAD1000 LAYER \t\t--> " + str(round((end - start) / 60, 2)) + " min")
 
-        # print("ADDING 12 NDVI LAYERS")
+        # Add NDVI Monthly layers
         start = time.time()
         visParams = {'min': 0, 'max': 1, 'palette': ['red', 'yellow', 'green']}
         for i in range(1, 13):
@@ -564,7 +553,7 @@ class Irrigation30():
             myMap.add_ee_layer(self.image.select(temp_band), visParams,
                                show=False, name='NDVI ' + month_label)
         end = time.time()
-        print("ADDED 12 NDVI LAYERS \t--> " + str(round((end - start) / 60, 2)) + " min")
+        print("ADDED MONTHLY NDVI LAYERS \t--> " + str(round((end - start) / 60, 2)) + " min")
 
         myMap.add_child(folium.LayerControl())
         folium.Marker([self.center_lat, self.center_lon], tooltip='center').add_to(myMap)
@@ -593,9 +582,25 @@ class Irrigation30():
         plt.title("NDVI Temporal Signature")
         plt.legend()
 
+    def set_asset_directory(self, base_asset_directory):
+        if (type(base_asset_directory) == str):
+            self.base_asset_directory = base_asset_directory
+            print("BASE ASSET DIRECTORY:", self.base_asset_directory)
+        else:
+            raise ValueError(
+                "Please enter a string for base_asset_directory like '/users/<GEE_USERNAME>/'"
+            )
+            exit()
+
     def write_image_asset(self, image_asset_id, write_simple_version=False):
         '''Writes predicted image out as an image to Google Earth Engine as an asset'''
         # image_asset_id = self.base_asset_directory + '/' + image_asset_id
+        if self.base_asset_directory == None:
+            raise ValueError(
+                "Please set a base_asset_directory like 'users/<GEE_USERNAME>/' with set_base_asset_directory(dir). Your asset will be stored in this asset folder in Google Earth Engine."
+            )
+            exit()
+
         image_asset_id = self.base_asset_directory + image_asset_id
 
         print("BASE ASSET DIRECTORY:", self.base_asset_directory)
@@ -628,7 +633,7 @@ class Irrigation30():
             task = ee.batch.Export.image.toDrive(
                 crs=self.model_projection,
                 region=self.aoi_ee,
-                image=self.image.select('prediction'),  # image=self.predicted_image ?
+                image=self.image.select('prediction'),
                 scale=self.RESOLUTION,
                 description=filename,
                 maxPixels=1e13

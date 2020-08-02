@@ -1,16 +1,16 @@
 import setuptools
 
-# with open("README.md", "r") as fh:
-#     long_description = fh.read()
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setuptools.setup(
     name="irrigation30",
-    version="0.0.1",
+    version="0.0.2",
     author="Weixin Wu",
     author_email="wwu34@berkeley.edu",
     description="Generate irrigation predictions at 30m resolution using Google Earth Engine.",
-    # long_description=long_description,
-    # long_description_content_type="text/markdown",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/AngelaWuGitHub/irrigation30",
     packages=setuptools.find_packages(),
     classifiers=[
