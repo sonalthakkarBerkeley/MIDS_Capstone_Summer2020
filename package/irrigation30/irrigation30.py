@@ -520,21 +520,26 @@ class Irrigation30():
 
         # print("ADDING PREDICTION LAYER")
         start = time.time()
-        visParams = {'min': 0, 'max': 1, 'palette': ['yellow', 'green']}
+        # NEW VIS PARAMS: Cluster map layer
+        visParams = {'min': 0, 'max': self.nClusters - 1,
+                     'palette': self.CLUSTER_COLORS[:self.nClusters]}
+        # OLD VIS PARAMS
+        # visParams = {'min': 0, 'max': 1, 'palette': ['yellow', 'green']}
         myMap.add_ee_layer(self.image.select('prediction'), visParams, show=True, name='Prediction')
         end = time.time()
-        print("ADDED PREDICTION LAYER --> " + str(round((end - start) / 60, 2)) + " min")
+        print("ADDED PREDICTION LAYER \t--> " +
+              str(round((end - start) / 60, 2)) + " min")
 
         # Add Sentinel-2 RGB quarterly layers
         # print("ADDING S2 RGB Q LAYERS")
         start = time.time()
         visParams = {'max': 4000}
-        myMap.add_ee_layer(self.Sentinel_RGB_Q1, visParams, show=False, name="S2-Q1")
-        myMap.add_ee_layer(self.Sentinel_RGB_Q2, visParams, show=False, name="S2-Q2")
-        myMap.add_ee_layer(self.Sentinel_RGB_Q3, visParams, show=False, name="S2-Q3")
-        myMap.add_ee_layer(self.Sentinel_RGB_Q4, visParams, show=False, name="S2-Q4")
+        myMap.add_ee_layer(self.Sentinel_RGB_Q1, visParams, show=False, name="Sentinel2-Q1")
+        myMap.add_ee_layer(self.Sentinel_RGB_Q2, visParams, show=False, name="Sentinel2-Q2")
+        myMap.add_ee_layer(self.Sentinel_RGB_Q3, visParams, show=False, name="Sentinel2-Q3")
+        myMap.add_ee_layer(self.Sentinel_RGB_Q4, visParams, show=False, name="Sentinel2-Q4")
         end = time.time()
-        print("ADDED S2 RGB LAYERS --> " + str(round((end - start) / 60, 2)) + " min")
+        print("ADDED S2 RGB LAYERS \t--> " + str(round((end - start) / 60, 2)) + " min")
 
         # print("ADDING G1000 LAYER")
         start = time.time()
@@ -548,7 +553,7 @@ class Irrigation30():
         #     5: Croplands: rainfed, rainfed, very minor fragments (orange)
         myMap.add_ee_layer(self.image.select('gfsad1000'), visParams, show=False, name='GFSAD1000')
         end = time.time()
-        print("ADDED G1000 LAYER --> " + str(round((end - start) / 60, 2)) + " min")
+        print("ADDED GFSAD1000 LAYER \t--> " + str(round((end - start) / 60, 2)) + " min")
 
         # print("ADDING 12 NDVI LAYERS")
         start = time.time()
@@ -559,12 +564,12 @@ class Irrigation30():
             myMap.add_ee_layer(self.image.select(temp_band), visParams,
                                show=False, name='NDVI ' + month_label)
         end = time.time()
-        print("ADDED 12 NDVI LAYERS --> " + str(round((end - start) / 60, 2)) + " min")
+        print("ADDED 12 NDVI LAYERS \t--> " + str(round((end - start) / 60, 2)) + " min")
 
         myMap.add_child(folium.LayerControl())
         folium.Marker([self.center_lat, self.center_lon], tooltip='center').add_to(myMap)
 
-        print('============ Prediction Layer Legend ============')
+        print('\n============ Prediction Layer Legend ============')
         # print the comments for each cluster
         for i in range(self.nClusters):
             print('Cluster {} ({}): {}'.format(i, Irrigation30.CLUSTER_COLORS[i], self.comment[i]))
