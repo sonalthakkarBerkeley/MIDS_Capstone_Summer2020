@@ -50,8 +50,6 @@ If you are having a hard time getting the right package versions installed, you 
 
 For a full tutorial of how the package is used in Jupyter notebooks, see our Jupyter notebook demo `Demo.ipynb`.
 
-For a stripped down version of this demo, see `Template.ipynb`.
-
 ## Testing
 
 from irrigation30 import __
